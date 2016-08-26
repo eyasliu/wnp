@@ -1,8 +1,8 @@
 #!/bin/sh
+WEBROOT="D:/wnpserver/www"
 
 NGINX_URL=http://nginx.org/download/nginx-1.11.3.zip
 PHP_URL=http://windows.php.net/downloads/releases/php-7.0.10-nts-Win32-VC14-x64.zip
-WEBROOT="D:/wnpserver/www"
 
 SERVER_DIR="D:/wnpserver"
 NGINX_ZIP="./nginx.zip"

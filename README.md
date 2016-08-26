@@ -12,6 +12,11 @@ cd wnp
 wnp install
 ```
 
+## about webroot
+
+the default webroot is `D:\wnpserver\www`
+
+you can change file `./wnp` line 2 before install to define you webroot
 
 # Usage
 
