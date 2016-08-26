@@ -1,0 +1,118 @@
+#!/bin/sh
+
+NGINX_URL=http://nginx.org/download/nginx-1.11.3.zip
+PHP_URL=http://windows.php.net/downloads/releases/php-7.0.10-nts-Win32-VC14-x64.zip
+WEBROOT="D:/wnpserver/www"
+
+SERVER_DIR="D:/wnpserver"
+NGINX_ZIP="./nginx.zip"
+
+NGINX_DIR=$SERVER_DIR/bin/nginx-1.11.3
+PHP_ZIP="./php7.0.10.zip"
+PHP_DIR="$SERVER_DIR/bin/php7.0.10"
+
+
+download() {
+	if [ ! -e "$NGINX_ZIP" ]; then
+		echo "Downloading nginx ..."
+		curl -o $NGINX_ZIP $NGINX_URL
+	fi
+
+	if [ ! -e "$PHP_ZIP" ]; then
+		echo "Downloading php7.0.10"
+		curl -p $PHP_ZIP $PHP_URL
+	fi
+
+	echo "Download Complate!"
+}
+
+decompress() {
+	if [ ! -d "$SERVER_DIR/bin" ]; then
+		mkdir $SERVER_DIR
+		mkdir $SERVER_DIR/bin
+	else 
+		echo "$SERVER_DIR is not empty"
+	fi
+	echo "unzip ..."
+	unzip $NGINX_ZIP -d $SERVER_DIR/bin
+	unzip $PHP_ZIP -d $PHP_DIR
+}
+
+setNginxConf() {
+	echo $PWD
+	cp $PWD/nginx.conf.bak $PWD/nginx.conf
+	sed -i "s#{{{webroot}}}#$WEBROOT#g" ./nginx.conf
+}
+
+install() {
+	download
+	decompress
+	setNginxConf
+	mkdir $WEBROOT
+	cp $PWD/php.ini $PHP_DIR
+	cp $PWD/nginx.conf $NGINX_DIR/conf/
+	cp $PWD/index.php $WEBROOT
+
+	mypath=${PWD#/}
+	echo "@bash ${mypath:0:1}:${mypath:1}/wnp %*" > "C:/bin/wnp.cmd"
+}
+
+startNginx() {
+	PWD=pwd
+	NGINX_CMD=$NGINX_DIR/nginx.exe
+	NGINX_CONF=$NGINX_DIR/conf/nginx.conf
+	echo "Starting Nginx ..."
+	cd $NGINX_DIR
+	RunHiddenConsole $NGINX_CMD -c $NGINX_CONF
+	cd $PWD
+	return $RETVAL
+}
+
+startPhp() {
+	PHP_CGI="$PHP_DIR/php-cgi.exe"
+	echo "Starting PHP ..."
+	RunHiddenConsole $PHP_CGI -b 127.0.0.1:9000 -c $PHP_DIR/php.ini
+}
+
+start() {
+	startNginx
+	startPhp
+}
+
+stop() {
+	echo "Stoping ..."
+	taskkill -F -IM nginx.exe* -T 
+	taskkill -F -IM php-cgi* -T
+}
+
+help(){
+	echo "wnp {start|stop|restart}"
+}
+
+case "$1" in 
+	install)
+		install
+		start
+		;;
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		stop
+		start
+		;;
+	help)
+		help
+		;;
+	nginx)
+		cd $NGINX_DIR
+		$NGINX_DIR/nginx.exe $2 $3 $4 $5
+		;;
+	*)
+		help
+esac
+
+exit 0
